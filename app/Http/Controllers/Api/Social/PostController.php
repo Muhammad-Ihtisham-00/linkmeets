@@ -90,9 +90,9 @@ class PostController extends Controller
         try {
             $user = $request->user();
 
-            // Fetch the post with media, user, likes count, and liked_by_me flag
+            // Fetch the post with media, user, likes count, liked_by_me, and comments_count
             $post = Post::with('user', 'media')
-                ->withCount('likes')
+                ->withCount(['likes', 'comments']) // Add comments count
                 ->withExists([
                     'likes as liked_by_me' => function ($q) use ($user) {
                         $q->where('user_id', $user->id);
@@ -136,6 +136,7 @@ class PostController extends Controller
                 'views_count' => $post->views_count,
                 'likes_count' => $post->likes_count,
                 'liked_by_me' => (bool) $post->liked_by_me,
+                'comments_count' => $post->comments_count, // <-- new
                 'media' => $media,
                 'created_at' => $post->created_at,
             ];

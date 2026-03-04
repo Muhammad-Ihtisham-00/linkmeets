@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Profile\UsernameController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\Auth\PasswordResetController;
 use App\Http\Controllers\Api\Profile\IntroVideoController;
+use App\Http\Controllers\api\Social\PostCommentController;
 use App\Http\Controllers\Api\Profile\BusinessCardController;
 use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Profile\ChangePasswordController;
@@ -118,6 +119,14 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             // Likes
             Route::post('/like/{postId}', [PostController::class, 'toggleLike']);
             Route::get('/likes/{postId}', [PostController::class, 'likes']);
+
+            //Comments
+            Route::post('{postId}/comments/', [PostCommentController::class, 'store']);
+            Route::get('{postId}/comments/', [PostCommentController::class, 'index']);
+            Route::post('/comments/{commentId}/like', [PostCommentController::class, 'toggleLike']);
+            Route::delete('/comments/{commentId}', [PostCommentController::class, 'delete']);
+            Route::get('/comments/{commentId}/replies', [PostCommentController::class, 'replies']);
+            Route::get('/comments/{commentId}/likes', [PostCommentController::class, 'likes']);
         });
 
         // Reviews

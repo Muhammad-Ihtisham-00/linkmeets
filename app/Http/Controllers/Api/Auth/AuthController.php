@@ -21,7 +21,6 @@ class AuthController extends Controller
     {
         try {
 
-            // Validate user input
             $validated = $request->validate([
                 'first_name'  => 'required|string|max:50',
                 'last_name'   => 'nullable|string|max:50',
@@ -33,7 +32,6 @@ class AuthController extends Controller
                 'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             ]);
 
-            // Generate unique username
             $base = strtolower($validated['first_name']);
             do {
                 $random = rand(10000, 99999);
@@ -44,7 +42,6 @@ class AuthController extends Controller
                 ? $request->file('profile_picture')->store('profile_pictures')
                 : null;
 
-            // Create user
             $user = User::create([
                 'first_name' => $validated['first_name'],
                 'last_name'  => $validated['last_name'] ?? null,
@@ -55,108 +52,95 @@ class AuthController extends Controller
                 'profile_picture' => $profilePicture,
             ]);
 
-            // Attach interests
             if (!empty($validated['interests'])) {
                 $user->interests()->attach($validated['interests']);
             }
 
-            // Send welcome email
             Mail::to($user->email)->send(new WelcomeMail($user));
-
-            // Send verification email
             event(new Registered($user));
 
-            // Generate auth token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // API response
+            // Load relationships
+            $user->load('interests');
+
+            $userData = $user->toArray();
+
+            $userData['profile_picture'] = $user->profile_picture
+                ? Storage::url($user->profile_picture)
+                : Storage::url('placeholder.jpg');
+
+            $userData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
+
             return $this->successResponse(
                 'Registration successful',
                 [
-                    'user' => [
-                        'id'         => $user->id,
-                        'first_name' => $user->first_name,
-                        'last_name'  => $user->last_name,
-                        'username'   => $user->username,
-                        'email'      => $user->email,
-                        'address'    => $user->address,
-                        'dob'        => $user->dob,
-                        'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture)
-                            : Storage::url('placeholder.jpg'),
-                        'interests'  => $user->interests()->pluck('name'),
-
-                    ],
+                    'user' => $userData,
                     'token' => $token,
                 ],
                 201
             );
         } catch (ValidationException $e) {
-
             return $this->errorResponse('Validation failed', $e->errors(), 422);
         } catch (\Throwable $e) {
-
             return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
         }
     }
-
 
     public function login(Request $request)
     {
         try {
 
-            // Validate input
             $validated = $request->validate([
-                'login'    => 'required|string', // email or username
+                'login'    => 'required|string',
                 'password' => 'required|string|min:8',
             ]);
 
-            // Identify login field
             $loginField = filter_var($validated['login'], FILTER_VALIDATE_EMAIL)
                 ? 'email'
                 : 'username';
 
-            // Find user
             $user = User::where($loginField, $validated['login'])->first();
 
-            // Check credentials
             if (!$user || !Hash::check($validated['password'], $user->password)) {
                 return $this->errorResponse('Invalid credentials', null, 401);
             }
 
-            // Generate token
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            // Response
+            $user->load('interests');
+
+            $userData = $user->toArray();
+
+            $userData['profile_picture'] = $user->profile_picture
+                ? Storage::url($user->profile_picture)
+                : null;
+
+            $userData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
+
             return $this->successResponse(
                 'Login successful',
                 [
-                    'user' => [
-                        'id'         => $user->id,
-                        'first_name' => $user->first_name,
-                        'last_name'  => $user->last_name,
-                        'username'   => $user->username,
-                        'email'      => $user->email,
-                        'dob'        => $user->dob,
-                    ],
+                    'user' => $userData,
                     'token' => $token,
                 ],
                 200
             );
         } catch (ValidationException $e) {
-
             return $this->errorResponse('Validation failed', $e->errors(), 422);
         } catch (\Throwable $e) {
-
             return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
         }
     }
 
     public function logout(Request $request)
     {
-        // Revoke current token
         $request->user()->currentAccessToken()->delete();
 
-        // Response
         return $this->successResponse('Logged out successfully');
     }
 }

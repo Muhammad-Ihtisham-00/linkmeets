@@ -12,42 +12,22 @@ class ProfileController extends Controller
 {
     use ApiResponse;
 
-    /**
-     * Get authenticated user's profile
-     */
     public function show(Request $request)
     {
         try {
-            $user = $request->user();
 
-            // Load interests relationship
+            $user = $request->user();
             $user->load('interests');
 
-            $profileData = [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'username' => $user->username,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'dob' => $user->dob?->format('Y-m-d'),
-                'bio' => $user->bio,
-                'about' => $user->about,
-                'account_type' => $user->account_type,
-                'kyc_verified' => $user->kyc_verified,
-                'kyc_verified_at' => $user->kyc_verified_at,
-                'profile_picture' => $user->profile_picture ? Storage::url($user->profile_picture) : null,
-                'intro_video' => $user->intro_video ? Storage::url($user->intro_video) : null,
-                'interests' => $user->interests->map(function ($interest) {
-                    return [
-                        'id' => $interest->id,
-                        'name' => $interest->name,
-                    ];
-                }),
-                'email_verified_at' => $user->email_verified_at,
-                'created_at' => $user->created_at,
-            ];
+            $profileData = $user->toArray();
+
+            $profileData['profile_picture'] = $user->profile_picture
+                ? Storage::url($user->profile_picture)
+                : null;
+
+            $profileData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
 
             return $this->successResponse(
                 'Profile retrieved successfully',
@@ -59,15 +39,12 @@ class ProfileController extends Controller
         }
     }
 
-    /**
-     * Update authenticated user's profile
-     */
     public function update(Request $request)
     {
         try {
+
             $user = $request->user();
 
-            // Validate user input
             $validated = $request->validate([
                 'first_name' => 'sometimes|string|max:50',
                 'last_name' => 'sometimes|string|max:50',
@@ -80,34 +57,24 @@ class ProfileController extends Controller
                 'interests.*' => 'exists:interests,id',
             ]);
 
-            // Update user profile
             $user->fill($validated);
             $user->save();
 
-            // Sync interests if provided
             if (isset($validated['interests'])) {
                 $user->interests()->sync($validated['interests']);
             }
 
-            // Reload interests
             $user->load('interests');
 
-            $profileData = [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                'phone' => $user->phone,
-                'address' => $user->address,
-                'dob' => $user->dob?->format('Y-m-d'),
-                'bio' => $user->bio,
-                'about' => $user->about,
-                'interests' => $user->interests->map(function ($interest) {
-                    return [
-                        'id' => $interest->id,
-                        'name' => $interest->name,
-                    ];
-                }),
-            ];
+            $profileData = $user->toArray();
+
+            $profileData['profile_picture'] = $user->profile_picture
+                ? Storage::url($user->profile_picture)
+                : null;
+
+            $profileData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
 
             return $this->successResponse(
                 'Profile updated successfully',
