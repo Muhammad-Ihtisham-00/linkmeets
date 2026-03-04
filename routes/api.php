@@ -112,6 +112,7 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::post('/create', [PostController::class, 'create']);
             Route::get('/show/{postId}', [PostController::class, 'show']);
             Route::delete('/delete/{postId}', [PostController::class, 'delete']);
+            Route::post('{postId}/share', [PostController::class, 'share']);
 
             // Increment view count
             Route::post('/increment-view/{postId}', [PostController::class, 'incrementView']);

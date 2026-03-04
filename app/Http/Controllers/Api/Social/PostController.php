@@ -90,22 +90,25 @@ class PostController extends Controller
         try {
             $user = $request->user();
 
-            // Fetch the post with media, user, likes count, liked_by_me, and comments_count
+            // Fetch the post with media, user, counts, and flags
             $post = Post::with('user', 'media')
-                ->withCount(['likes', 'comments']) // Add comments count
+                ->withCount(['likes', 'comments', 'shares']) // added shares
                 ->withExists([
                     'likes as liked_by_me' => function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    },
+                    'shares as shared_by_me' => function ($q) use ($user) {
                         $q->where('user_id', $user->id);
                     }
                 ])
                 ->findOrFail($postId);
 
-            // Check visibility: private posts can only be seen by owner
+            // Check visibility
             if ($post->visibility === 'private' && $post->user_id !== $user->id) {
                 return $this->errorResponse('This post is private', null, 403);
             }
 
-            // Increment views if viewer is not the owner
+            // Increment views if not owner
             if ($post->user_id !== $user->id) {
                 $post->increment('views_count');
             }
@@ -136,7 +139,9 @@ class PostController extends Controller
                 'views_count' => $post->views_count,
                 'likes_count' => $post->likes_count,
                 'liked_by_me' => (bool) $post->liked_by_me,
-                'comments_count' => $post->comments_count, // <-- new
+                'comments_count' => $post->comments_count,
+                'shares_count' => $post->shares_count,      // ✅ added
+                'shared_by_me' => (bool) $post->shared_by_me, // ✅ added
                 'media' => $media,
                 'created_at' => $post->created_at,
             ];
@@ -254,6 +259,33 @@ class PostController extends Controller
                 ],
                 200
             );
+        } catch (\Throwable $e) {
+            return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
+        }
+    }
+
+    public function share(Request $request, $postId)
+    {
+        try {
+            $user = $request->user();
+
+            $request->validate([
+                'caption' => 'nullable|string|max:1000'
+            ]);
+
+            $post = Post::findOrFail($postId);
+
+            // Prevent duplicate share
+            if ($post->shares()->where('user_id', $user->id)->exists()) {
+                return $this->errorResponse('You already shared this post', null, 400);
+            }
+
+            $post->shares()->create([
+                'user_id' => $user->id,
+                'caption' => $request->caption
+            ]);
+
+            return $this->successResponse('Post shared successfully', null, 200);
         } catch (\Throwable $e) {
             return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
         }

@@ -67,6 +67,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PostCommentLike::class);
     }
 
+    public function sharedPosts()
+    {
+        return $this->belongsToMany(Post::class, 'post_shares')
+            ->withPivot('caption')
+            ->withTimestamps();
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

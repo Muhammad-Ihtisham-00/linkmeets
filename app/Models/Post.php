@@ -51,4 +51,16 @@ class Post extends Model
         return $this->hasMany(PostComment::class)
             ->whereNull('parent_id'); // root comments only
     }
+
+    public function shares()
+    {
+        return $this->hasMany(PostShare::class);
+    }
+
+    public function sharedByUsers()
+    {
+        return $this->belongsToMany(User::class, 'post_shares')
+            ->withPivot('caption')
+            ->withTimestamps();
+    }
 }
