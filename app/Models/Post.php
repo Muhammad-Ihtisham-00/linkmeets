@@ -17,6 +17,7 @@ class Post extends Model
         'visibility',
         'content',
         'views_count',
+        'original_post_id'
     ];
 
     /*
