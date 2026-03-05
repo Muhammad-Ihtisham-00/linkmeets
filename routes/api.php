@@ -17,6 +17,9 @@ use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Profile\ChangePasswordController;
 use App\Http\Controllers\Api\Profile\PrivacySettingController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
+use App\Http\Controllers\Api\Appointment\AppointmentController;
+use App\Http\Controllers\Api\Appointment\ServiceController;
+use App\Http\Controllers\Api\Appointment\ReviewController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -125,4 +128,68 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             // review endpoints
         });
     });
+});
+
+
+// for appointments and reviews, we will create separate controllers and routes later when we implement those features.
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+| All routes are protected with Sanctum auth middleware
+| Header required: Authorization: Bearer {token}
+|              + : Accept: application/json
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // ══════════════════════════════════════════════════════════════
+    // SERVICES
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('services')->group(function () {
+
+        Route::get('/', [ServiceController::class, 'index']);    // My services
+        Route::post('/', [ServiceController::class, 'store']);    // Create service
+        Route::get('/{id}', [ServiceController::class, 'show']);     // Service detail
+        Route::put('/{id}', [ServiceController::class, 'update']);   // Update service
+        Route::put('/{id}/toggle', [ServiceController::class, 'toggle']);   // On/Off toggle
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);  // Delete service
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // APPOINTMENTS
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('appointments')->group(function () {
+
+        Route::get('/', [AppointmentController::class, 'index']);       // My appointments list
+        Route::post('/', [AppointmentController::class, 'store']);       // Book appointment
+        Route::get('/{id}', [AppointmentController::class, 'show']);        // Detail
+        Route::put('/{id}/cancel', [AppointmentController::class, 'cancel']);      // Cancel
+        Route::put('/{id}/reschedule', [AppointmentController::class, 'reschedule']);  // Reschedule
+        Route::put('/{id}/start-call', [AppointmentController::class, 'startCall']);   // Start call
+        Route::put('/{id}/end-call', [AppointmentController::class, 'endCall']);     // End call
+
+        // Review submit (appointment complete hone k baad)
+        Route::post('/{id}/review', [ReviewController::class, 'store']);            // Submit review
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // USER SPECIFIC
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('users/{userId}')->group(function () {
+
+        Route::get('services', [ServiceController::class, 'userServices']);  // User ki active services
+        Route::get('reviews', [ReviewController::class, 'userReviews']);   // User ki saari reviews
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // SERVICE REVIEWS
+    // ══════════════════════════════════════════════════════════════
+    Route::get('services/{serviceId}/reviews', [ReviewController::class, 'serviceReviews']); // Service ki reviews
+
 });
