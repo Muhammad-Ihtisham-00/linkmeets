@@ -9,6 +9,8 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -108,8 +110,6 @@ class User extends Authenticatable implements MustVerifyEmail
 
     // ─── APPOINTMENTS ─────────────────────────────────────────────────
 
-   
-
     // ─── SERVICES ─────────────────────────────────────────────────
 
     /**
@@ -169,5 +169,97 @@ class User extends Authenticatable implements MustVerifyEmail
     public function receivedReviews(): HasMany
     {
         return $this->hasMany(Review::class, 'reviewee_id');
+    }
+
+
+
+    // ─── CHAT AND CONVERSATIONS ────────────────────────────────────────────
+
+    /**
+     * Meri saari conversations
+     * $user->conversations
+     */
+    public function conversations(): BelongsToMany
+    {
+        return $this->belongsToMany(Conversation::class, 'conversation_participants', 'user_id', 'conversation_id')
+            ->withPivot('role', 'last_read_at', 'joined_at', 'left_at', 'is_muted')
+            ->withTimestamps()
+            ->whereNull('conversation_participants.left_at'); // Leave kiye hue nahi
+    }
+
+    /**
+     * Maine jo messages bheje
+     * $user->sentMessages
+     */
+    public function sentMessages(): HasMany
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Maine jo groups banaye
+     * $user->createdGroups
+     */
+    public function createdGroups(): HasMany
+    {
+        return $this->hasMany(Conversation::class, 'created_by');
+    }
+
+    // ─── BLOCK ────────────────────────────────────────────────────
+
+    /**
+     * Maine jine block kiya
+     * $user->blockedUsers
+     */
+    public function blockedUsers(): HasMany
+    {
+        return $this->hasMany(BlockedUser::class, 'blocker_id');
+    }
+
+    /**
+     * Mujhe jinhon ne block kiya
+     * $user->blockedByUsers
+     */
+    public function blockedByUsers(): HasMany
+    {
+        return $this->hasMany(BlockedUser::class, 'blocked_id');
+    }
+
+    // ─── REPORT ───────────────────────────────────────────────────
+
+    /**
+     * Maine jo reports ki
+     * $user->reportsMade
+     */
+    public function reportsMade(): HasMany
+    {
+        return $this->hasMany(ReportedUser::class, 'reporter_id');
+    }
+
+    /**
+     * Mere against jo reports hain
+     * $user->reportsReceived
+     */
+    public function reportsReceived(): HasMany
+    {
+        return $this->hasMany(ReportedUser::class, 'reported_id');
+    }
+
+    // ─── HELPER METHODS ───────────────────────────────────────────
+
+    /**
+     * Check karo k koi user block hai
+     */
+    public function hasBlocked(int $userId): bool
+    {
+        return $this->blockedUsers()->where('blocked_id', $userId)->exists();
+    }
+
+    /**
+     * Check karo k mujhe block kiya gaya hai
+     */
+    public function isBlockedBy(int $userId): bool
+    {
+        return $this->blockedByUsers()->where('blocker_id', $userId)->exists();
     }
 }
