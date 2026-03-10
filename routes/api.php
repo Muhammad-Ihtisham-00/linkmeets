@@ -1,30 +1,31 @@
 <?php
 
-use App\Http\Controllers\Api\Appointment\AppointmentController;
-use App\Http\Controllers\api\Appointment\ReviewController;
-use App\Http\Controllers\api\Appointment\ServiceController;
-use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Auth\EmailVerificationController;
-use App\Http\Controllers\Api\Auth\PasswordResetController;
-use App\Http\Controllers\api\Chat\BlockReportController;
-use App\Http\Controllers\api\Chat\ConversationController;
-use App\Http\Controllers\api\Chat\MessageController;
-use App\Http\Controllers\Api\Marketplace\MarketplaceController;
-use App\Http\Controllers\Api\Profile\BusinessCardController;
-use App\Http\Controllers\Api\Profile\ChangePasswordController;
-use App\Http\Controllers\Api\Profile\EmailController;
-use App\Http\Controllers\Api\Profile\GalleryController;
-use App\Http\Controllers\Api\Profile\IntroVideoController;
-use App\Http\Controllers\Api\Profile\PrivacySettingController;
-use App\Http\Controllers\Api\Profile\ProfileController;
-use App\Http\Controllers\Api\Profile\ProfilePictureController;
-use App\Http\Controllers\Api\Profile\UsernameController;
-use App\Http\Controllers\api\Social\PostCommentController;
-use App\Http\Controllers\api\Social\PostController;
-use App\Http\Controllers\Api\Social\RelationController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Kyc\KycController;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\api\Social\PostController;
+use App\Http\Controllers\api\Chat\MessageController;
+use App\Http\Controllers\Api\Profile\EmailController;
+use App\Http\Controllers\Api\Profile\GalleryController;
+use App\Http\Controllers\Api\Profile\ProfileController;
+use App\Http\Controllers\Api\Social\RelationController;
+use App\Http\Controllers\api\Chat\BlockReportController;
+use App\Http\Controllers\Api\Profile\UsernameController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\api\Chat\ConversationController;
+use App\Http\Controllers\api\Appointment\ReviewController;
+use App\Http\Controllers\Api\Auth\PasswordResetController;
+use App\Http\Controllers\Api\Profile\IntroVideoController;
+use App\Http\Controllers\api\Social\PostCommentController;
+use App\Http\Controllers\api\Appointment\ServiceController;
+use App\Http\Controllers\Api\Profile\BusinessCardController;
+use App\Http\Controllers\Api\Auth\EmailVerificationController;
+use App\Http\Controllers\Api\Profile\ChangePasswordController;
+use App\Http\Controllers\Api\Profile\PrivacySettingController;
+use App\Http\Controllers\Api\Profile\ProfilePictureController;
+use App\Http\Controllers\Api\Appointment\AppointmentController;
+use App\Http\Controllers\Api\Marketplace\MarketplaceController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -156,6 +157,11 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::post('/products/{productId}/update', [MarketplaceController::class, 'update']);
         Route::delete('/products/{productId}/delete', [MarketplaceController::class, 'delete']);
     });
+
+    Route::prefix('kyc')->group(function () {
+
+        Route::post('/submit', [KycController::class, 'submit']);
+    });
 });
 
 
@@ -273,5 +279,4 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/report', [BlockReportController::class, 'report']);          // Report user
 
     });
-
 });
