@@ -8,7 +8,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -103,5 +103,71 @@ class User extends Authenticatable implements MustVerifyEmail
             'kyc_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+
+    // ─── APPOINTMENTS ─────────────────────────────────────────────────
+
+   
+
+    // ─── SERVICES ─────────────────────────────────────────────────
+
+    /**
+     * User ki saari services
+     * $user->services
+     */
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class, 'user_id');
+    }
+
+    /**
+     * User ki sirf active services
+     * $user->activeServices
+     */
+    public function activeServices(): HasMany
+    {
+        return $this->hasMany(Service::class, 'user_id')
+            ->where('is_active', true);
+    }
+
+    // ─── APPOINTMENTS ─────────────────────────────────────────────
+
+    /**
+     * Maine jo appointments book ki hain (main client hoon)
+     * $user->bookedAppointments
+     */
+    public function bookedAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'client_id');
+    }
+
+    /**
+     * Mere saath jo appointments book hui hain (main provider hoon)
+     * $user->receivedAppointments
+     */
+    public function receivedAppointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'provider_id');
+    }
+
+    // ─── REVIEWS ──────────────────────────────────────────────────
+
+    /**
+     * Maine jo reviews diye hain
+     * $user->givenReviews
+     */
+    public function givenReviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewer_id');
+    }
+
+    /**
+     * Mujhe jo reviews mile hain
+     * $user->receivedReviews
+     */
+    public function receivedReviews(): HasMany
+    {
+        return $this->hasMany(Review::class, 'reviewee_id');
     }
 }
