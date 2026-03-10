@@ -22,6 +22,10 @@ use App\Http\Controllers\Api\Appointment\AppointmentController;
 use App\Http\Controllers\Api\Appointment\ServiceController;
 use App\Http\Controllers\Api\Appointment\ReviewController;
 
+use App\Http\Controllers\Api\Chat\ConversationController;
+use App\Http\Controllers\Api\Chat\MessageController;
+use App\Http\Controllers\Api\Chat\BlockReportController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -201,5 +205,59 @@ Route::middleware('auth:sanctum')->group(function () {
     // SERVICE REVIEWS
     // ══════════════════════════════════════════════════════════════
     Route::get('services/{serviceId}/reviews', [ReviewController::class, 'serviceReviews']); // Service ki reviews
+
+});
+
+
+
+
+// ═════════════════════════════════════════════════════════════
+// CHAT & CONVERSATIONS
+// ═════════════════════════════════════════════════════════════
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // ══════════════════════════════════════════════════════════════
+    // CONVERSATIONS
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('conversations')->group(function () {
+
+        Route::get('/', [ConversationController::class, 'index']);           // My chat list
+        Route::post('/private', [ConversationController::class, 'startPrivate']);    // Start private chat
+        Route::post('/group', [ConversationController::class, 'createGroup']);     // Create group
+        Route::get('/{id}', [ConversationController::class, 'show']);            // Conversation detail
+        Route::put('/{id}/group', [ConversationController::class, 'updateGroup']);     // Update group name/image
+        Route::post('/{id}/participants', [ConversationController::class, 'addParticipants']); // Add members to group
+        Route::delete('/{id}/leave', [ConversationController::class, 'leave']);           // Leave group
+
+        // ── Messages ─────────────────────────────────────────────
+        Route::get('/{id}/messages', [MessageController::class, 'index']);               // Get messages
+        Route::post('/{id}/messages', [MessageController::class, 'store']);               // Send message
+        Route::put('/{id}/read', [MessageController::class, 'markAsRead']);          // Mark as read ✓✓
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // MESSAGES
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('messages')->group(function () {
+
+        Route::delete('/{id}', [MessageController::class, 'destroy']);             // Delete message
+        Route::put('/{id}/live-location', [MessageController::class, 'updateLiveLocation']);  // Update live location
+        Route::delete('/{id}/live-location', [MessageController::class, 'stopLiveLocation']);    // Stop live location
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // BLOCK & REPORT
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('users')->group(function () {
+
+        Route::get('/blocked', [BlockReportController::class, 'blockedList']);     // My blocked list
+        Route::post('/{id}/block', [BlockReportController::class, 'block']);           // Block user
+        Route::delete('/{id}/block', [BlockReportController::class, 'unblock']);         // Unblock user
+        Route::post('/{id}/report', [BlockReportController::class, 'report']);          // Report user
+
+    });
 
 });
