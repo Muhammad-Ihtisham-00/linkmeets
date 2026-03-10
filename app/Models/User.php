@@ -74,6 +74,11 @@ class User extends Authenticatable implements MustVerifyEmail
             ->withTimestamps();
     }
 
+    public function marketplaceProducts()
+    {
+        return $this->hasMany(MarketplaceProduct::class, 'user_id');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

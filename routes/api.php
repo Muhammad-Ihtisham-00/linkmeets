@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Profile\ChangePasswordController;
 use App\Http\Controllers\Api\Profile\PrivacySettingController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
+use App\Http\Controllers\Api\Marketplace\MarketplaceController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -134,5 +135,17 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::prefix('reviews')->group(function () {
             // review endpoints
         });
+    });
+
+    Route::prefix('marketplace')->group(function () {
+
+        // Public - view all products
+        Route::get('/products', [MarketplaceController::class, 'index']);
+        Route::get('/products/{productId}', [MarketplaceController::class, 'show']);
+
+        Route::get('/my-products', [MarketplaceController::class, 'myProducts']);
+        Route::post('/products/create', [MarketplaceController::class, 'create']);
+        Route::post('/products/{productId}/update', [MarketplaceController::class, 'update']);
+        Route::delete('/products/{productId}/delete', [MarketplaceController::class, 'delete']);
     });
 });
