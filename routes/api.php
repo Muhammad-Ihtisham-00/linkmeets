@@ -142,8 +142,10 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
 
     Route::prefix('marketplace')->group(function () {
 
-        // Public - view all products
+        Route::get('/categories', [MarketplaceController::class, 'getAllCategories']);
+
         Route::get('/products', [MarketplaceController::class, 'index']);
+        Route::get('/products/search', [MarketplaceController::class, 'search']);
         Route::get('/products/{productId}', [MarketplaceController::class, 'show']);
 
         Route::get('/my-products', [MarketplaceController::class, 'myProducts']);

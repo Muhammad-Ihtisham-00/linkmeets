@@ -245,4 +245,85 @@ class MarketplaceController extends Controller
             return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
         }
     }
+
+    public function search(Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'query' => 'required|string|max:255',
+            ]);
+
+            $products = MarketplaceProduct::with(['user', 'category', 'images'])
+                ->where(function ($q) use ($validated) {
+                    $q->where('title', 'like', '%' . $validated['query'] . '%')
+                        ->orWhere('description', 'like', '%' . $validated['query'] . '%');
+                })
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($product) {
+
+                    return [
+                        'id' => $product->id,
+                        'title' => $product->title,
+                        'price' => $product->price,
+                        'condition' => $product->condition,
+                        'location' => $product->location,
+                        'category' => $product->category?->name,
+                        'user' => [
+                            'id' => $product->user->id,
+                            'name' => $product->user->name,
+                        ],
+                        'images' => $product->images->map(fn($img) => Storage::url($img->image_path)),
+                        'created_at' => $product->created_at,
+                    ];
+                });
+
+            return $this->successResponse(
+                'Search results retrieved successfully',
+                $products
+            );
+        } catch (ValidationException $e) {
+
+            return $this->errorResponse(
+                'Validation failed',
+                $e->errors(),
+                422
+            );
+        } catch (\Throwable $e) {
+
+            return $this->errorResponse(
+                'Something went wrong',
+                $e->getMessage(),
+                500
+            );
+        }
+    }
+
+    public function getAllCategories()
+    {
+        try {
+
+            $categories = MarketplaceCategory::orderBy('name')
+                ->get()
+                ->map(function ($category) {
+                    return [
+                        'id' => $category->id,
+                        'name' => $category->name,
+                    ];
+                });
+
+            return $this->successResponse(
+                'Categories retrieved successfully',
+                $categories
+            );
+        } catch (\Throwable $e) {
+
+            return $this->errorResponse(
+                'Something went wrong',
+                $e->getMessage(),
+                500
+            );
+        }
+    }
 }
