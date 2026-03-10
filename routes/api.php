@@ -1,27 +1,30 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Appointment\AppointmentController;
+use App\Http\Controllers\api\Appointment\ReviewController;
+use App\Http\Controllers\api\Appointment\ServiceController;
 use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\api\Social\PostController;
+use App\Http\Controllers\Api\Auth\EmailVerificationController;
+use App\Http\Controllers\Api\Auth\PasswordResetController;
+use App\Http\Controllers\api\Chat\BlockReportController;
+use App\Http\Controllers\api\Chat\ConversationController;
+use App\Http\Controllers\api\Chat\MessageController;
+use App\Http\Controllers\Api\Marketplace\MarketplaceController;
+use App\Http\Controllers\Api\Profile\BusinessCardController;
+use App\Http\Controllers\Api\Profile\ChangePasswordController;
 use App\Http\Controllers\Api\Profile\EmailController;
 use App\Http\Controllers\Api\Profile\GalleryController;
-use App\Http\Controllers\Api\Profile\ProfileController;
-use App\Http\Controllers\Api\Social\RelationController;
-use App\Http\Controllers\Api\Profile\UsernameController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
-use App\Http\Controllers\api\Appointment\ReviewController;
-use App\Http\Controllers\Api\Auth\PasswordResetController;
 use App\Http\Controllers\Api\Profile\IntroVideoController;
-use App\Http\Controllers\api\Social\PostCommentController;
-use App\Http\Controllers\api\Appointment\ServiceController;
-use App\Http\Controllers\Api\Profile\BusinessCardController;
-use App\Http\Controllers\Api\Auth\EmailVerificationController;
-use App\Http\Controllers\Api\Profile\ChangePasswordController;
 use App\Http\Controllers\Api\Profile\PrivacySettingController;
+use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
-use App\Http\Controllers\Api\Appointment\AppointmentController;
-use App\Http\Controllers\Api\Marketplace\MarketplaceController;
+use App\Http\Controllers\Api\Profile\UsernameController;
+use App\Http\Controllers\api\Social\PostCommentController;
+use App\Http\Controllers\api\Social\PostController;
+use App\Http\Controllers\Api\Social\RelationController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -214,5 +217,59 @@ Route::middleware('auth:sanctum')->group(function () {
     // SERVICE REVIEWS
     // ══════════════════════════════════════════════════════════════
     Route::get('services/{serviceId}/reviews', [ReviewController::class, 'serviceReviews']); // Service ki reviews
+
+});
+
+
+
+
+// ═════════════════════════════════════════════════════════════
+// CHAT & CONVERSATIONS
+// ═════════════════════════════════════════════════════════════
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // ══════════════════════════════════════════════════════════════
+    // CONVERSATIONS
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('conversations')->group(function () {
+
+        Route::get('/', [ConversationController::class, 'index']);           // My chat list
+        Route::post('/private', [ConversationController::class, 'startPrivate']);    // Start private chat
+        Route::post('/group', [ConversationController::class, 'createGroup']);     // Create group
+        Route::get('/{id}', [ConversationController::class, 'show']);            // Conversation detail
+        Route::put('/{id}/group', [ConversationController::class, 'updateGroup']);     // Update group name/image
+        Route::post('/{id}/participants', [ConversationController::class, 'addParticipants']); // Add members to group
+        Route::delete('/{id}/leave', [ConversationController::class, 'leave']);           // Leave group
+
+        // ── Messages ─────────────────────────────────────────────
+        Route::get('/{id}/messages', [MessageController::class, 'index']);               // Get messages
+        Route::post('/{id}/messages', [MessageController::class, 'store']);               // Send message
+        Route::put('/{id}/read', [MessageController::class, 'markAsRead']);          // Mark as read ✓✓
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // MESSAGES
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('messages')->group(function () {
+
+        Route::delete('/{id}', [MessageController::class, 'destroy']);             // Delete message
+        Route::put('/{id}/live-location', [MessageController::class, 'updateLiveLocation']);  // Update live location
+        Route::delete('/{id}/live-location', [MessageController::class, 'stopLiveLocation']);    // Stop live location
+
+    });
+
+    // ══════════════════════════════════════════════════════════════
+    // BLOCK & REPORT
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('users')->group(function () {
+
+        Route::get('/blocked', [BlockReportController::class, 'blockedList']);     // My blocked list
+        Route::post('/{id}/block', [BlockReportController::class, 'block']);           // Block user
+        Route::delete('/{id}/block', [BlockReportController::class, 'unblock']);         // Unblock user
+        Route::post('/{id}/report', [BlockReportController::class, 'report']);          // Report user
+
+    });
 
 });
