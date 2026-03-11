@@ -26,7 +26,7 @@ use App\Http\Controllers\Api\Profile\PrivacySettingController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
 use App\Http\Controllers\Api\Appointment\AppointmentController;
 use App\Http\Controllers\Api\Marketplace\MarketplaceController;
-
+use App\Http\Controllers\Api\Social\TimelineController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -136,6 +136,11 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::delete('/comments/{commentId}', [PostCommentController::class, 'delete']);
             Route::get('/comments/{commentId}/replies', [PostCommentController::class, 'replies']);
             Route::get('/comments/{commentId}/likes', [PostCommentController::class, 'likes']);
+        });
+
+        Route::prefix('timeline')->group(function () {
+
+            Route::get('/home', [TimelineController::class, 'home']);
         });
 
         // Reviews
