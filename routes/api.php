@@ -4,12 +4,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Kyc\KycController;
 use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Social\PollController;
 use App\Http\Controllers\api\Social\PostController;
 use App\Http\Controllers\api\Chat\MessageController;
 use App\Http\Controllers\Api\Profile\EmailController;
 use App\Http\Controllers\Api\Profile\GalleryController;
 use App\Http\Controllers\Api\Profile\ProfileController;
 use App\Http\Controllers\Api\Social\RelationController;
+use App\Http\Controllers\Api\Social\TimelineController;
 use App\Http\Controllers\api\Chat\BlockReportController;
 use App\Http\Controllers\Api\Profile\UsernameController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -26,7 +28,6 @@ use App\Http\Controllers\Api\Profile\PrivacySettingController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
 use App\Http\Controllers\Api\Appointment\AppointmentController;
 use App\Http\Controllers\Api\Marketplace\MarketplaceController;
-use App\Http\Controllers\Api\Social\TimelineController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -99,6 +100,8 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
     // Social
     Route::prefix('social')->group(function () {
 
+        Route::get('/profile/{userId}', [ProfileController::class, 'showUser']);
+
         // Relationships / friends
         Route::prefix('relations')->group(function () {
             Route::post('follow/{userId}', [RelationController::class, 'follow']);
@@ -136,6 +139,9 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::delete('/comments/{commentId}', [PostCommentController::class, 'delete']);
             Route::get('/comments/{commentId}/replies', [PostCommentController::class, 'replies']);
             Route::get('/comments/{commentId}/likes', [PostCommentController::class, 'likes']);
+
+            Route::post('/polls/{poll}/vote', [PollController::class, 'vote']);
+            Route::get('/polls/{poll}/results', [PollController::class, 'results']);
         });
 
         Route::prefix('timeline')->group(function () {

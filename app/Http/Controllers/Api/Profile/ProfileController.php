@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Profile;
 
+use App\Models\User;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -83,6 +84,32 @@ class ProfileController extends Controller
             );
         } catch (ValidationException $e) {
             return $this->errorResponse('Validation failed', $e->errors(), 422);
+        } catch (\Throwable $e) {
+            return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
+        }
+    }
+
+    public function showUser($userId)
+    {
+        try {
+
+            $user = User::with('interests')->findOrFail($userId);
+
+            $profileData = $user->toArray();
+
+            $profileData['profile_picture'] = $user->profile_picture
+                ? Storage::url($user->profile_picture)
+                : null;
+
+            $profileData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
+
+            return $this->successResponse(
+                'User profile retrieved successfully',
+                $profileData,
+                200
+            );
         } catch (\Throwable $e) {
             return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
         }
