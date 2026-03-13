@@ -33,6 +33,8 @@ use App\Http\Controllers\Api\Marketplace\MarketplaceController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
+Route::post('/google-login', [AuthController::class, 'googleLogin']);
+
 // Password Reset Routes
 Route::prefix('password')->group(function () {
 

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Auth;
 use App\Models\User;
 use App\Mail\WelcomeMail;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
+use Google_Client;
 
 class AuthController extends Controller
 {
@@ -142,5 +144,92 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return $this->successResponse('Logged out successfully');
+    }
+
+    public function googleLogin(Request $request)
+    {
+        try {
+
+            $validated = $request->validate([
+                'id_token' => 'required|string',
+            ]);
+
+            $client = new Google_Client([
+                'client_id' => config('services.google.client_id')
+            ]);
+
+            $payload = $client->verifyIdToken($validated['id_token']);
+
+            if (!$payload) {
+                return $this->errorResponse('Invalid Google token', null, 401);
+            }
+
+            $email = $payload['email'];
+            $firstName = $payload['given_name'] ?? 'User';
+            $lastName = $payload['family_name'] ?? null;
+            $avatar = $payload['picture'] ?? null;
+
+            // Find existing user
+            $user = User::where('email', $email)->first();
+
+            if (!$user) {
+
+                // Generate username (same logic as register)
+                $base = strtolower($firstName);
+
+                do {
+                    $random = rand(10000, 99999);
+                    $username = $base . $random;
+                } while (User::where('username', $username)->exists());
+
+                $user = User::create([
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'username' => $username,
+                    'email' => $email,
+                    'password' => Hash::make(Str::random(32)),
+                    'profile_picture' => $avatar, // external url
+                    'email_verified_at' => now(),
+                ]);
+
+                event(new Registered($user));
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            $user->load('interests');
+
+            $userData = $user->toArray();
+
+            // profile picture formatting
+            if ($user->profile_picture) {
+
+                if (Str::startsWith($user->profile_picture, 'http')) {
+                    $userData['profile_picture'] = $user->profile_picture;
+                } else {
+                    $userData['profile_picture'] = Storage::url($user->profile_picture);
+                }
+            } else {
+                $userData['profile_picture'] = Storage::url('placeholder.jpg');
+            }
+
+            $userData['intro_video'] = $user->intro_video
+                ? Storage::url($user->intro_video)
+                : null;
+
+            return $this->successResponse(
+                'Google login successful',
+                [
+                    'user' => $userData,
+                    'token' => $token,
+                ]
+            );
+        } catch (ValidationException $e) {
+
+            return $this->errorResponse('Validation failed', $e->errors(), 422);
+        } catch (\Throwable $e) {
+
+            return $this->errorResponse('Google authentication failed', $e->getMessage(), 500);
+        }
     }
 }
