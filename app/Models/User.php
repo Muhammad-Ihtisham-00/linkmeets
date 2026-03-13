@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -79,6 +80,11 @@ class User extends Authenticatable implements MustVerifyEmail
     public function marketplaceProducts()
     {
         return $this->hasMany(MarketplaceProduct::class, 'user_id');
+    }
+
+    public function kycVerification()
+    {
+        return $this->hasOne(KycVerification::class, 'user_id');
     }
 
     /**

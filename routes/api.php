@@ -1,31 +1,35 @@
 <?php
 
-use App\Http\Controllers\Api\Appointment\AppointmentController;
-use App\Http\Controllers\api\Appointment\ReviewController;
-use App\Http\Controllers\api\Appointment\ServiceController;
-use App\Http\Controllers\Api\Auth\AuthController;
-use App\Http\Controllers\Api\Auth\EmailVerificationController;
-use App\Http\Controllers\Api\Auth\PasswordResetController;
-use App\Http\Controllers\api\Chat\BlockReportController;
-use App\Http\Controllers\api\Chat\ConversationController;
-use App\Http\Controllers\api\Chat\MessageController;
-use App\Http\Controllers\Api\Marketplace\MarketplaceController;
-use App\Http\Controllers\Api\Profile\BusinessCardController;
-use App\Http\Controllers\Api\Profile\ChangePasswordController;
-use App\Http\Controllers\Api\Profile\EmailController;
-use App\Http\Controllers\Api\Profile\GalleryController;
-use App\Http\Controllers\Api\Profile\IntroVideoController;
-use App\Http\Controllers\Api\Profile\PrivacySettingController;
-use App\Http\Controllers\Api\Profile\ProfileController;
-use App\Http\Controllers\Api\Profile\ProfilePictureController;
-use App\Http\Controllers\Api\Profile\UsernameController;
-use App\Http\Controllers\api\Social\PostCommentController;
-use App\Http\Controllers\api\Social\PostController;
-use App\Http\Controllers\Api\Social\RelationController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Kyc\KycController;
+use App\Http\Controllers\Api\Auth\AuthController;
+use App\Http\Controllers\Api\Social\PollController;
+use App\Http\Controllers\api\Social\PostController;
+use App\Http\Controllers\api\Chat\MessageController;
+use App\Http\Controllers\Api\Profile\EmailController;
+use App\Http\Controllers\Api\Profile\GalleryController;
+use App\Http\Controllers\Api\Profile\ProfileController;
+use App\Http\Controllers\Api\Social\RelationController;
+use App\Http\Controllers\Api\Social\TimelineController;
+use App\Http\Controllers\api\Chat\BlockReportController;
+use App\Http\Controllers\Api\Profile\UsernameController;
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\Api\Wallet\WalletController;
+use App\Http\Controllers\api\Chat\ConversationController;
+use App\Http\Controllers\api\Appointment\ReviewController;
+use App\Http\Controllers\Api\Auth\PasswordResetController;
+use App\Http\Controllers\Api\Profile\IntroVideoController;
+use App\Http\Controllers\api\Social\PostCommentController;
+use App\Http\Controllers\api\Appointment\ServiceController;
+use App\Http\Controllers\Api\Profile\BusinessCardController;
+use App\Http\Controllers\Api\Social\UserSuggestionController;
+use App\Http\Controllers\Api\Auth\EmailVerificationController;
+use App\Http\Controllers\Api\Profile\ChangePasswordController;
+use App\Http\Controllers\Api\Profile\PrivacySettingController;
+use App\Http\Controllers\Api\Profile\ProfilePictureController;
+use App\Http\Controllers\Api\Appointment\AppointmentController;
+use App\Http\Controllers\Api\Marketplace\MarketplaceController;
 
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -94,10 +98,14 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         // Privacy Settings
         Route::get('/privacy-settings', [PrivacySettingController::class, 'show']);
         Route::post('/privacy-settings', [PrivacySettingController::class, 'update']);
+
+        Route::delete('/delete', [ProfileController::class, 'deleteProfile']);
     });
 
     // Social
     Route::prefix('social')->group(function () {
+
+        Route::get('/profile/{userId}', [ProfileController::class, 'showUser']);
 
         // Relationships / friends
         Route::prefix('relations')->group(function () {
@@ -113,6 +121,9 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::get('my-followers', [RelationController::class, 'myFollowers']);
             Route::get('my-blocked', [RelationController::class, 'myBlocked']);
         });
+
+        Route::get('users/suggestions', [UserSuggestionController::class, 'suggestedUsers']);
+
 
         // Posts
         Route::prefix('posts')->group(function () {
@@ -136,6 +147,14 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::delete('/comments/{commentId}', [PostCommentController::class, 'delete']);
             Route::get('/comments/{commentId}/replies', [PostCommentController::class, 'replies']);
             Route::get('/comments/{commentId}/likes', [PostCommentController::class, 'likes']);
+
+            Route::post('/polls/{poll}/vote', [PollController::class, 'vote']);
+            Route::get('/polls/{poll}/results', [PollController::class, 'results']);
+        });
+
+        Route::prefix('timeline')->group(function () {
+
+            Route::get('/home', [TimelineController::class, 'home']);
         });
 
         // Reviews
@@ -158,6 +177,11 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         Route::post('/products/create', [MarketplaceController::class, 'create']);
         Route::post('/products/{productId}/update', [MarketplaceController::class, 'update']);
         Route::delete('/products/{productId}/delete', [MarketplaceController::class, 'delete']);
+    });
+
+    Route::prefix('kyc')->group(function () {
+
+        Route::post('/submit', [KycController::class, 'submit']);
     });
 });
 
@@ -273,7 +297,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/report', [BlockReportController::class, 'report']);          // Report user
 
     });
-
 });
 
 

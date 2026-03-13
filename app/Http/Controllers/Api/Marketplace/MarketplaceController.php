@@ -25,6 +25,19 @@ class MarketplaceController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($product) {
+
+                    $user = $product->user ? $product->user->toArray() : null;
+
+                    if ($user) {
+                        $user['profile_picture'] = $product->user->profile_picture
+                            ? Storage::url($product->user->profile_picture)
+                            : null;
+
+                        $user['intro_video'] = $product->user->intro_video
+                            ? Storage::url($product->user->intro_video)
+                            : null;
+                    }
+
                     return [
                         'id' => $product->id,
                         'title' => $product->title,
@@ -33,18 +46,23 @@ class MarketplaceController extends Controller
                         'description' => $product->description,
                         'location' => $product->location,
                         'category' => $product->category?->name,
-                        'user' => [
-                            'id' => $product->user->id,
-                            'name' => $product->user->name,
-                        ],
+                        'user' => $user,
                         'images' => $product->images->map(fn($img) => Storage::url($img->image_path)),
                         'created_at' => $product->created_at,
                     ];
                 });
 
-            return $this->successResponse('Products retrieved successfully', $products);
+            return $this->successResponse(
+                'Products retrieved successfully',
+                $products
+            );
         } catch (\Throwable $e) {
-            return $this->errorResponse('Something went wrong', $e->getMessage(), 500);
+
+            return $this->errorResponse(
+                'Something went wrong',
+                $e->getMessage(),
+                500
+            );
         }
     }
 
@@ -56,6 +74,18 @@ class MarketplaceController extends Controller
         try {
             $product = MarketplaceProduct::with(['user', 'category', 'images'])->findOrFail($productId);
 
+            $user = $product->user ? $product->user->toArray() : null;
+
+            if ($user) {
+                $user['profile_picture'] = $product->user->profile_picture
+                    ? Storage::url($product->user->profile_picture)
+                    : null;
+
+                $user['intro_video'] = $product->user->intro_video
+                    ? Storage::url($product->user->intro_video)
+                    : null;
+            }
+
             $data = [
                 'id' => $product->id,
                 'title' => $product->title,
@@ -64,10 +94,7 @@ class MarketplaceController extends Controller
                 'description' => $product->description,
                 'location' => $product->location,
                 'category' => $product->category?->name,
-                'user' => [
-                    'id' => $product->user->id,
-                    'name' => $product->user->name,
-                ],
+                'user' => $user,
                 'images' => $product->images->map(fn($img) => Storage::url($img->image_path)),
                 'created_at' => $product->created_at,
             ];
@@ -263,6 +290,18 @@ class MarketplaceController extends Controller
                 ->get()
                 ->map(function ($product) {
 
+                    $user = $product->user ? $product->user->toArray() : null;
+
+                    if ($user) {
+                        $user['profile_picture'] = $product->user->profile_picture
+                            ? Storage::url($product->user->profile_picture)
+                            : null;
+
+                        $user['intro_video'] = $product->user->intro_video
+                            ? Storage::url($product->user->intro_video)
+                            : null;
+                    }
+
                     return [
                         'id' => $product->id,
                         'title' => $product->title,
@@ -270,10 +309,7 @@ class MarketplaceController extends Controller
                         'condition' => $product->condition,
                         'location' => $product->location,
                         'category' => $product->category?->name,
-                        'user' => [
-                            'id' => $product->user->id,
-                            'name' => $product->user->name,
-                        ],
+                        'user' => $user,
                         'images' => $product->images->map(fn($img) => Storage::url($img->image_path)),
                         'created_at' => $product->created_at,
                     ];

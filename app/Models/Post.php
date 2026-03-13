@@ -64,4 +64,34 @@ class Post extends Model
             ->withPivot('caption')
             ->withTimestamps();
     }
+
+    public function celebration()
+    {
+        return $this->hasOne(PostCelebration::class);
+    }
+
+    public function hiring()
+    {
+        return $this->hasOne(PostHiring::class);
+    }
+
+    public function jobSeeker()
+    {
+        return $this->hasOne(PostJobSeeker::class);
+    }
+
+    public function findExpert()
+    {
+        return $this->hasOne(PostFindExpert::class);
+    }
+
+    public function event()
+    {
+        return $this->hasOne(PostEvent::class);
+    }
+
+    public function poll()
+    {
+        return $this->hasOne(PostPoll::class);
+    }
 }
