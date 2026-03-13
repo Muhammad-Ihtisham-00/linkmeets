@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\Profile\IntroVideoController;
 use App\Http\Controllers\api\Social\PostCommentController;
 use App\Http\Controllers\api\Appointment\ServiceController;
 use App\Http\Controllers\Api\Profile\BusinessCardController;
+use App\Http\Controllers\Api\Social\UserSuggestionController;
 use App\Http\Controllers\Api\Auth\EmailVerificationController;
 use App\Http\Controllers\Api\Profile\ChangePasswordController;
 use App\Http\Controllers\Api\Profile\PrivacySettingController;
@@ -95,6 +96,8 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         // Privacy Settings
         Route::get('/privacy-settings', [PrivacySettingController::class, 'show']);
         Route::post('/privacy-settings', [PrivacySettingController::class, 'update']);
+
+        Route::delete('/delete', [ProfileController::class, 'deleteProfile']);
     });
 
     // Social
@@ -116,6 +119,9 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
             Route::get('my-followers', [RelationController::class, 'myFollowers']);
             Route::get('my-blocked', [RelationController::class, 'myBlocked']);
         });
+
+        Route::get('users/suggestions', [UserSuggestionController::class, 'suggestedUsers']);
+
 
         // Posts
         Route::prefix('posts')->group(function () {
