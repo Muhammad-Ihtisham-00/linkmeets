@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\Social\TimelineController;
 use App\Http\Controllers\api\Chat\BlockReportController;
 use App\Http\Controllers\Api\Profile\UsernameController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use App\Http\Controllers\Api\Wallet\WalletController;
 use App\Http\Controllers\api\Chat\ConversationController;
 use App\Http\Controllers\api\Appointment\ReviewController;
 use App\Http\Controllers\Api\Auth\PasswordResetController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\Api\Profile\PrivacySettingController;
 use App\Http\Controllers\Api\Profile\ProfilePictureController;
 use App\Http\Controllers\Api\Appointment\AppointmentController;
 use App\Http\Controllers\Api\Marketplace\MarketplaceController;
+
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -163,6 +165,8 @@ Route::middleware('auth:sanctum', 'verified')->group(function () {
         });
     });
 
+    // Marketplace Routes
+
     Route::prefix('marketplace')->group(function () {
 
         Route::get('/categories', [MarketplaceController::class, 'getAllCategories']);
@@ -247,9 +251,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-
-
-
 // ═════════════════════════════════════════════════════════════
 // CHAT & CONVERSATIONS
 // ═════════════════════════════════════════════════════════════
@@ -298,4 +299,31 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{id}/report', [BlockReportController::class, 'report']);          // Report user
 
     });
+});
+
+
+
+// for payment methods and transactions, we will create separate controllers and routes later when we implement those features.
+
+Route::middleware('auth:sanctum')->group(function () {
+
+    // ══════════════════════════════════════════════════════════════
+    // WALLET
+    // ══════════════════════════════════════════════════════════════
+    Route::prefix('wallet')->group(function () {
+
+        Route::get('/', [WalletController::class, 'index']);               // Wallet + balances
+        Route::get('/transactions', [WalletController::class, 'transactions']);        // Transactions list
+        Route::post('/add-money', [WalletController::class, 'addMoney']);            // Add money
+        Route::post('/send-money', [WalletController::class, 'sendMoney']);           // Send to user
+        Route::post('/withdraw', [WalletController::class, 'withdraw']);            // Withdraw
+
+        // ── Payment Methods ───────────────────────────────────────
+        Route::get('/payment-methods', [WalletController::class, 'paymentMethods']);          // List
+        Route::post('/payment-methods', [WalletController::class, 'addPaymentMethod']);        // Add new
+        Route::put('/payment-methods/{id}/default', [WalletController::class, 'setDefaultPaymentMethod']); // Set default
+        Route::delete('/payment-methods/{id}', [WalletController::class, 'deletePaymentMethod']);     // Delete
+
+    });
+
 });
